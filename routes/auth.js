@@ -59,11 +59,54 @@ router.post(
     }
   }
 );
-router.post("/", (req, res) => {
-  obj = {
-    name: "boommm",
-  };
-  res.json(obj);
-});
+
+router.post(
+    "/loginuser",
+    [
+      body("email", "Invalid mail").isEmail(),
+      body("password", "Invalid pass").isLength({ min: 5 }),
+
+    ],
+    async (req, res) => {
+      const errors = validationResult(req);
+  
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+
+
+    
+    let {email,password} = req.body;
+    let user= await User.findOne({email})
+    if(!user){
+        return res.status(400).json({error:"Enter the valid credentials .   "})
+    }
+
+    let pass_match=await bcrypt.compareSync(password, user.password);
+
+    if(!pass_match){
+        return res.status(400).json({error:"Enter the valid credentials .   "})
+    }
+
+    const data={
+        user :{
+            id:user.id
+        }
+    }
+
+    var authtoken = jwt.sign(data, JWT_SECRET);
+    res.json ({authtoken})
+
+
+
+      
+
+
+
+
+    }
+
+)
 
 module.exports = router;
